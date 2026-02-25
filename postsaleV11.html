@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Your Files - Realtime University</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+    </style>
+</head>
+<body class="p-4">
+
+    <div class="glass-card max-w-md w-full rounded-2xl p-8 text-center animate-in fade-in zoom-in duration-500">
+        <!-- Success Icon -->
+        <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+            <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+            </svg>
+        </div>
+
+        <h1 class="text-3xl font-bold text-gray-900 mb-4">
+            Thank you for your purchase.
+        </h1>
+        
+        <p class="text-gray-600 mb-8 leading-relaxed">
+            Below is the download link for your file setup files. Please save them to a secure location on your computer.
+        </p>
+
+        <!-- Download Button -->
+        <a href="Setup_Files_-_11th_Edition.zip" class="inline-block w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-4 px-6 rounded-xl transition duration-200 transform hover:scale-[1.02] active:scale-[0.98] shadow-lg mb-6">
+            Download Setup Files
+        </a>
+
+        <!-- Return Home Link -->
+        <div class="pt-6 border-t border-gray-100">
+            <a href="https://voicewriting.github.io/realtimeuniversity.com/" class="text-sm font-medium text-gray-500 hover:text-blue-600 transition-colors flex items-center justify-center gap-2">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
+                </svg>
+                Return to Homepage
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Optional: Custom message box instead of alert if download fails
+        const downloadBtn = document.querySelector('a[href="#"]');
+        downloadBtn.addEventListener('click', (e) => {
+            // In a real scenario, replace '#' with your actual file URL
+            console.log("Download initiated...");
+        });
+    </script>
+</body>
+</html>
