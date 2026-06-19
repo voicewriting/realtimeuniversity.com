@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fixed PayPal Pay Later Only</title>
+    
+    <script src="https://www.paypal.com/sdk/js?client-id=Aa9-od-CkaQjwrw8BzErBvEs_feqKU2KRHtIL-8tVKdhRL9KbAHBhKxBb8cgZRN0K0paWWTyLyFvZXUk&components=buttons,funding-eligibility,messages&currency=USD&enable-funding=paylater"></script>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 40px;
+            max-width: 400px;
+        }
+        .product-card {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        #paypal-paylater-message {
+            margin: 15px 0;
+            min-height: 40px;
+        }
+        #paypal-button-container {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="product-card">
+        <h2>Premium Headset</h2>
+        <p>Price: <strong>$150.00 USD</strong></p>
+
+        <div id="paypal-paylater-message"></div>
+        <div id="paypal-button-container"></div>
+    </div>
+
+    <script>
+        const orderAmount = "150.00";
+
+        // Render the promotional text
+        if (window.paypal && paypal.Messages) {
+            paypal.Messages({
+                amount: orderAmount,
+                placement: 'product'
+            }).render('#paypal-paylater-message');
+        }
+
+        // Render the standalone Pay Later button
+        if (window.paypal && paypal.Buttons) {
+            
+            // FIX 2: Initialize the button configurations natively first
+            const payLaterButton = paypal.Buttons({
+                fundingSource: paypal.FUNDING.PAYLATER,
+                createOrder: function(data, actions) {
+                    return actions.order.create({
+                        purchase_units: [{
+                            amount: {
+                                value: orderAmount
+                            }
+                        }]
+                    });
+                },
+                onApprove: function(data, actions) {
+                    return actions.order.capture().then(function(details) {
+                        alert('Transaction completed by ' + details.payer.name.given_name);
+                    });
+                },
+                onError: function (err) {
+                    console.error('PayPal Error:', err);
+                }
+            });
+
+            // FIX 3: Check the specific button instance eligibility
+            if (payLaterButton.isEligible()) {
+                payLaterButton.render('#paypal-button-container');
+            } else {
+                console.warn("Pay Later standalone button is not eligible for this user environment. Falling back to standard PayPal stack.");
+                
+                // FALLBACK: If strict standalone Pay Later fails, render the default layout 
+                // so your checkout isn't left empty.
+                paypal.Buttons({
+                    createOrder: function(data, actions) {
+                        return actions.order.create({
+                            purchase_units: [{ amount: { value: orderAmount } }]
+                        });
+                    }
+                }).render('#paypal-button-container');
+            }
+        }
+    </script>
+
+</body>
+</html>
