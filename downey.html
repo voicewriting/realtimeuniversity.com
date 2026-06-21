@@ -88,32 +88,16 @@
             font-weight: 500;
         }
 
-        /* --- Updated Mobile Responsiveness --- */
+        /* --- NEW: Mobile Responsiveness --- */
         @media (max-width: 768px) {
             .checkout-container {
                 flex-direction: column; /* Stack cards vertically */
                 align-items: center;    /* Center them */
-                gap: 16px;              /* Slightly tighten gap between cards */
             }
 
             .theme-atlassian {
                 max-width: 100%;        /* Allow cards to fill the mobile width */
                 width: 100%;
-                padding: 20px;          /* Tighter card padding on mobile */
-                text-align: center;     /* Center-aligns headline and price */
-            }
-
-            .theme-atlassian h2 {
-                font-size: 18px;        /* Scaled down to prevent awkward multi-line wrapping */
-                margin-bottom: 4px;     /* Tightened spacing below headline */
-            }
-
-            .theme-atlassian .price-tag {
-                margin-bottom: 10px;    /* Tightened spacing below price */
-            }
-
-            .theme-atlassian .divider {
-                margin: 10px 0;         /* Tightened layout surrounding the PayPal elements */
             }
         }
     </style>
@@ -216,3 +200,7 @@
                 }
             });
         }
+    </script>
+
+</body>
+</html>
