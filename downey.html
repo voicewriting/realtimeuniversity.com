@@ -5,8 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bundle Checkout</title>
     
-    <script src="https://www.paypal.com/sdk/js?client-id=AVXA2q-L92HjYNxgy1MksKYvvm5NGjz8zk0qgTRfMFmA5kGVTeOs_xuOr3ppNq7AfQHDaIU3IqbrWKB6
-&components=buttons,funding-eligibility,messages&currency=USD&enable-funding=paylater"></script>
+    <script src="https://www.paypal.com/sdk/js?client-id=EAi09cYPz8lG-vvgNC13Vo4UxzvAEGKdGKFn96pMzBAlMkZ6ZHXgd4wTdCYU2_48xdItIMAzlK6eyIdj&components=buttons,funding-eligibility,messages&currency=USD&enable-funding=paylater"></script>
 
     <style>
         /* Lock screen to prevent scrolling on desktop, allow on mobile */
@@ -132,8 +131,8 @@
     <script>
         // Setup configurations for both packages
         const bundles = [
-            { id: "1", amount: "3299.00", btnTarget: "#btn-bundle-1", msgTarget: "#msg-bundle-1", statusTarget: "status-bundle-1" },
-            { id: "2", amount: "3599.00", btnTarget: "#btn-bundle-2", msgTarget: "#msg-bundle-2", statusTarget: "status-bundle-2" }
+            { id: "1", amount: "1500.00", btnTarget: "#btn-bundle-1", msgTarget: "#msg-bundle-1", statusTarget: "status-bundle-1" },
+            { id: "2", amount: "3000.00", btnTarget: "#btn-bundle-2", msgTarget: "#msg-bundle-2", statusTarget: "status-bundle-2" }
         ];
 
         function handleStatusUpdate(elementId, text, isSuccess) {
