@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bundle Checkout</title>
+    
+    <script src="https://www.paypal.com/sdk/js?client-id=AZfqzoxgQFfMRk2LRhMD_-yBwknpdi6wlOGTulqBzmusaESwlrSQ440_92FEWCk6hjb5lZPnjH4cI82a
+&components=buttons,funding-eligibility,messages&currency=USD&enable-funding=paylater"></script>
+
+    <style>
+        /* Lock screen to prevent scrolling on desktop, allow on mobile */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background-color:#00050a;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            box-sizing: border-box;
+            /* Changed from hidden to auto so stacked mobile cards can be scrolled */
+            overflow: auto; 
+        }
+
+        /* Container for the two bundles */
+        .checkout-container {
+            display: flex;
+            gap: 24px;
+            width: 100%;
+            max-width: 840px;
+            justify-content: center;
+        }
+
+        /* Your Atlassian Light Style */
+        .theme-atlassian {
+            background: #FFFFFF;
+            border: 1px solid #DFE1E6;
+            padding: 28px;
+            border-radius: 8px;
+            box-shadow: 0 1px 1px rgba(9,30,66,0.1);
+            flex: 1;
+            max-width: 380px;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        .theme-atlassian h2 { 
+            color: #172B4D; 
+            font-size: 20px; 
+            font-weight: 600; 
+            margin: 0 0 6px 0; 
+        }
+
+        .theme-atlassian .price-tag { 
+            color: #0052CC; 
+            font-size: 24px; 
+            font-weight: 700; 
+            margin-bottom: 16px; 
+        }
+
+        .theme-atlassian .price-tag span { 
+            color: #6B778C; 
+            font-size: 13px; 
+            margin-left: 4px; 
+        }
+
+        .theme-atlassian .divider { 
+            height: 1px; 
+            background: #EBECF0; 
+            margin: 16px 0; 
+        }
+
+        .paylater-message-slot {
+            min-height: 40px;
+            margin-bottom: 12px;
+        }
+
+        /* Inline status alert area for testing */
+        .status-box {
+            display: none;
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 13px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        /* --- NEW: Mobile Responsiveness --- */
+        @media (max-width: 768px) {
+            .checkout-container {
+                flex-direction: column; /* Stack cards vertically */
+                align-items: center;    /* Center them */
+            }
+
+            .theme-atlassian {
+                max-width: 100%;        /* Allow cards to fill the mobile width */
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="checkout-container">
+        
+        <div class="theme-atlassian">
+            <h2>Voice Writing Student Bundle with 14-inch Laptop</h2>
+            <div class="price-tag">$3,299<span>USD</span></div>
+            <div class="divider"></div>
+            
+            <div id="msg-bundle-1" class="paylater-message-slot"></div>
+            <div id="btn-bundle-1"></div>
+            <div id="status-bundle-1" class="status-box"></div>
+        </div>
+
+        <div class="theme-atlassian">
+            <h2>Voice Writing Student Bundle with 16-inch Laptop</h2>
+            <div class="price-tag">$3,599<span>USD</span></div>
+            <div class="divider"></div>
+            
+            <div id="msg-bundle-2" class="paylater-message-slot"></div>
+            <div id="btn-bundle-2"></div>
+            <div id="status-bundle-2" class="status-box"></div>
+        </div>
+
+    </div>
+
+    <script>
+        // Setup configurations for both packages
+        const bundles = [
+            { id: "1", amount: "1500.00", btnTarget: "#btn-bundle-1", msgTarget: "#msg-bundle-1", statusTarget: "status-bundle-1" },
+            { id: "2", amount: "3000.00", btnTarget: "#btn-bundle-2", msgTarget: "#msg-bundle-2", statusTarget: "status-bundle-2" }
+        ];
+
+        function handleStatusUpdate(elementId, text, isSuccess) {
+            const box = document.getElementById(elementId);
+            box.textContent = text;
+            box.style.display = "block";
+            if (isSuccess) {
+                box.style.backgroundColor = "#E6F4EA";
+                box.style.color = "#137333";
+            } else {
+                box.style.backgroundColor = "#FCE8E6";
+                box.style.color = "#C5221F";
+            }
+        }
+
+        if (window.paypal) {
+            bundles.forEach(bundle => {
+                
+                // 1. Render Promo Message Strings
+                if (paypal.Messages) {
+                    paypal.Messages({
+                        amount: bundle.amount,
+                        placement: 'product'
+                    }).render(bundle.msgTarget);
+                }
+
+                // 2. Render Pay Later Standalone Buttons
+                if (paypal.Buttons) {
+                    const payLaterBtn = paypal.Buttons({
+                        fundingSource: paypal.FUNDING.PAYLATER,
+                        style: {
+                            layout: 'vertical',
+                            shape: 'rect',
+                            color: 'gold',
+                            label: 'pay'
+                        },
+                        createOrder: function(data, actions) {
+                            return actions.order.create({
+                                purchase_units: [{
+                                    amount: { value: bundle.amount }
+                                }]
+                            });
+                        },
+                        onApprove: function(data, actions) {
+                            return actions.order.capture().then(function(details) {
+                                handleStatusUpdate(bundle.statusTarget, "✓ Success! Paid by " + details.payer.name.given_name, true);
+                            });
+                        },
+                        onError: function(err) {
+                            console.error(err);
+                            handleStatusUpdate(bundle.statusTarget, "⚠ Error during checkout.", false);
+                        }
+                    });
+
+                    // Render fallback default stack automatically if strict Pay Later isn't supported for a user profile
+                    if (payLaterBtn.isEligible()) {
+                        payLaterBtn.render(bundle.btnTarget);
+                    } else {
+                        paypal.Buttons({
+                            createOrder: function(data, actions) {
+                                return actions.order.create({ purchase_units: [{ amount: { value: bundle.amount } }] });
+                            }
+                        }).render(bundle.btnTarget);
+                    }
+                }
+            });
+        }
+    </script>
+
+</body>
+</html>
