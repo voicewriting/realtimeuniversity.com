@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rain Watch — Kalshi Rain Market Scanner</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+  :root{
+    --bg: #0E151C;
+    --panel: #16202A;
+    --panel-hi: #1D2A36;
+    --line: #263544;
+    --text: #E7ECEF;
+    --muted: #7E8FA0;
+    --rain: #59AEDD;
+    --rain-dim: #2E4C5E;
+    --signal: #E8A94B;
+    --signal-dim: #4A3B24;
+    --no-side: #9C7BD1;
+    --good: #6FBE8F;
+  }
+
+  *{ box-sizing: border-box; }
+  html,body{ margin:0; padding:0; }
+  body{
+    background:
+      radial-gradient(ellipse 900px 500px at 15% -10%, rgba(89,174,221,0.10), transparent 60%),
+      var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+  }
+
+  .wrap{ max-width: 920px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ---------- Header ---------- */
+  header{
+    position: relative;
+    padding: 56px 0 28px;
+    border-bottom: 1px solid var(--line);
+    overflow: hidden;
+  }
+  .rain-streaks{
+    position:absolute; inset:0; z-index:0; opacity:0.35; pointer-events:none;
+  }
+  .rain-streaks span{
+    position:absolute; top:-40px; width:1px; height:60px;
+    background: linear-gradient(to bottom, transparent, var(--rain), transparent);
+    animation: fall linear infinite;
+  }
+  @keyframes fall{
+    to { transform: translateY(340px); }
+  }
+  @media (prefers-reduced-motion: reduce){
+    .rain-streaks span{ animation: none; display:none; }
+  }
+
+  .eyebrow{
+    position:relative; z-index:1;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--rain); margin: 0 0 14px;
+  }
+  h1{
+    position:relative; z-index:1;
+    font-family: 'Fraunces', serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-size: clamp(38px, 6vw, 58px);
+    line-height: 1.02;
+    margin: 0 0 14px;
+    letter-spacing: -0.01em;
+  }
+  h1 em{ font-style: italic; color: var(--rain); }
+  .sub{
+    position:relative; z-index:1;
+    color: var(--muted); font-size: 15.5px; max-width: 560px; line-height: 1.55; margin: 0;
+  }
+
+  /* ---------- Controls ---------- */
+  .controls{
+    display:flex; flex-wrap:wrap; align-items:center; gap: 14px;
+    margin: 28px 0 6px; padding: 18px 20px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  }
+  .ctrl-group{ display:flex; align-items:center; gap:8px; }
+  .ctrl-label{ font-size:12px; text-transform:uppercase; letter-spacing:0.08em; color: var(--muted); font-family:'IBM Plex Mono', monospace; }
+
+  .threshold-box{ display:flex; align-items:center; gap:10px; }
+  input[type=range]{
+    -webkit-appearance:none; width: 140px; height:3px; background: var(--line); border-radius:2px; outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:14px; height:14px; border-radius:50%;
+    background: var(--signal); cursor:pointer; border: 2px solid var(--bg);
+    box-shadow: 0 0 0 1px var(--signal);
+  }
+  .threshold-val{
+    font-family:'IBM Plex Mono', monospace; font-weight:600; font-size:18px; color: var(--signal);
+    min-width: 46px;
+  }
+
+  .seg{ display:flex; border: 1px solid var(--line); border-radius: 8px; overflow:hidden; }
+  .seg button{
+    background: transparent; border:none; color: var(--muted); padding: 7px 14px;
+    font-family:'IBM Plex Mono', monospace; font-size: 12.5px; cursor:pointer;
+    border-right: 1px solid var(--line);
+    transition: background 0.15s, color 0.15s;
+  }
+  .seg button:last-child{ border-right:none; }
+  .seg button.active{ background: var(--rain-dim); color: var(--text); }
+  .seg button:hover:not(.active){ background: var(--panel-hi); }
+
+  .refresh-btn{
+    margin-left: auto;
+    background: var(--rain-dim); color: var(--text); border: 1px solid var(--rain);
+    padding: 9px 18px; border-radius: 8px; font-family:'IBM Plex Mono', monospace;
+    font-size: 12.5px; letter-spacing: 0.04em; cursor:pointer; transition: background 0.15s;
+  }
+  .refresh-btn:hover{ background: var(--rain); color: #06141C; }
+  .refresh-btn:disabled{ opacity: 0.5; cursor: default; }
+
+  .status-line{
+    font-family:'IBM Plex Mono', monospace; font-size: 12px; color: var(--muted);
+    margin: 14px 2px 0; display:flex; justify-content:space-between; flex-wrap:wrap; gap:8px;
+  }
+  .status-line .dot{ color: var(--good); }
+
+  /* ---------- List ---------- */
+  .list{ margin-top: 22px; display:flex; flex-direction:column; gap: 10px; }
+
+  .row{
+    display:flex; align-items:stretch; gap: 0;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    overflow:hidden; text-decoration:none; color:inherit;
+    transition: border-color 0.15s, transform 0.1s;
+  }
+  .row:hover{ border-color: var(--rain); transform: translateX(2px); }
+
+  .gauge{
+    width: 6px; flex-shrink:0;
+    background: var(--line);
+    position: relative;
+  }
+  .gauge i{
+    position:absolute; bottom:0; left:0; width:100%;
+    background: linear-gradient(to top, var(--signal), var(--rain));
+    border-radius: 0 0 0 0;
+  }
+
+  .row-body{ flex:1; padding: 16px 18px; display:flex; align-items:center; gap: 16px; min-width:0; }
+
+  .row-main{ flex:1; min-width:0; }
+  .row-title{ font-size: 15px; font-weight:500; margin:0 0 4px; line-height:1.35; }
+  .row-meta{
+    font-family:'IBM Plex Mono', monospace; font-size: 11.5px; color: var(--muted);
+    display:flex; gap: 10px; flex-wrap:wrap;
+  }
+  .badge{
+    display:inline-block; padding: 1px 7px; border-radius: 4px; font-size: 10.5px;
+    letter-spacing: 0.06em; font-weight:600;
+  }
+  .badge.yes{ background: var(--rain-dim); color: var(--rain); }
+  .badge.no{ background: #33254A; color: var(--no-side); }
+
+  .row-price{ text-align:right; flex-shrink:0; }
+  .price-num{
+    font-family:'IBM Plex Mono', monospace; font-weight:600; font-size: 26px; color: var(--signal);
+    line-height:1;
+  }
+  .price-unit{ font-size:13px; color: var(--muted); margin-left:2px; }
+  .price-label{ font-size:10.5px; color: var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px; }
+
+  /* ---------- Empty / loading / error ---------- */
+  .empty, .loading, .err{
+    margin-top: 28px; padding: 40px 24px; text-align:center;
+    border: 1px dashed var(--line); border-radius: 10px; color: var(--muted);
+    font-size: 14px; line-height:1.6;
+  }
+  .err{ border-color: #5A3838; color: #E0A9A9; background: rgba(90,56,56,0.08); }
+  .err code{ color: #E7ECEF; }
+  .spinner{
+    width:22px; height:22px; border-radius:50%;
+    border: 2px solid var(--line); border-top-color: var(--rain);
+    animation: spin 0.8s linear infinite; margin: 0 auto 14px;
+  }
+  @keyframes spin{ to{ transform: rotate(360deg); } }
+
+  footer{
+    margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line);
+    font-size: 12px; color: var(--muted); line-height:1.6;
+  }
+
+  @media (max-width: 560px){
+    .row-body{ flex-direction:column; align-items:flex-start; gap:10px; }
+    .row-price{ text-align:left; }
+    .refresh-btn{ margin-left:0; width:100%; text-align:center; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <header>
+    <div class="rain-streaks" id="rainStreaks"></div>
+    <p class="eyebrow">Live · Kalshi public market data</p>
+    <h1>Rain Watch<br><em>above the line.</em></h1>
+    <p class="sub">Scans every open precipitation contract on Kalshi and surfaces only the buys priced above your threshold — the ones the crowd already thinks are likely.</p>
+  </header>
+
+  <div class="controls">
+    <div class="ctrl-group threshold-box">
+      <span class="ctrl-label">Min buy price</span>
+      <input type="range" id="thresholdSlider" min="1" max="99" value="40">
+      <span class="threshold-val" id="thresholdVal">40¢</span>
+    </div>
+    <div class="ctrl-group">
+      <span class="ctrl-label">Side</span>
+      <div class="seg" id="sideSeg">
+        <button data-side="yes" class="active">YES</button>
+        <button data-side="no">NO</button>
+        <button data-side="both">BOTH</button>
+      </div>
+    </div>
+    <button class="refresh-btn" id="refreshBtn">↻ Scan markets</button>
+  </div>
+
+  <div class="status-line">
+    <span id="statusText">Ready to scan.</span>
+    <span id="lastUpdated"></span>
+  </div>
+
+  <div id="resultsMount"></div>
+
+  <footer>
+    Data pulled live from Kalshi's public <code>/trade-api/v2</code> endpoints (no login required). Prices are implied probabilities in cents, not recommendations — this tool doesn't place trades or give financial advice. To avoid strict browser CORS policies on Kalshi's end, all requests are securely routed via <code>corsproxy.io</code> by default.
+  </footer>
+</div>
+
+<script>
+const API_BASE = 'https://api.elections.kalshi.com/trade-api/v2';
+let state = { side: 'yes', threshold: 40, markets: [] };
+
+// --- decorative rain streaks ---
+const streakHost = document.getElementById('rainStreaks');
+for(let i=0;i<26;i++){
+  const s = document.createElement('span');
+  s.style.left = (Math.random()*100)+'%';
+  s.style.animationDuration = (1.2 + Math.random()*1.6)+'s';
+  s.style.animationDelay = (Math.random()*2)+'s';
+  s.style.opacity = 0.15 + Math.random()*0.35;
+  streakHost.appendChild(s);
+}
+
+const mount = document.getElementById('resultsMount');
+const statusText = document.getElementById('statusText');
+const lastUpdated = document.getElementById('lastUpdated');
+const refreshBtn = document.getElementById('refreshBtn');
+const thresholdSlider = document.getElementById('thresholdSlider');
+const thresholdVal = document.getElementById('thresholdVal');
+
+thresholdSlider.addEventListener('input', () => {
+  state.threshold = parseInt(thresholdSlider.value, 10);
+  thresholdVal.textContent = state.threshold + '¢';
+  render();
+});
+
+document.getElementById('sideSeg').addEventListener('click', (e) => {
+  const btn = e.target.closest('button');
+  if(!btn) return;
+  document.querySelectorAll('#sideSeg button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  state.side = btn.dataset.side;
+  render();
+});
+
+refreshBtn.addEventListener('click', scan);
+
+function cents(dollarsStr, fallbackInt){
+  if(dollarsStr !== undefined && dollarsStr !== null && dollarsStr !== ''){
+    const v = Math.round(parseFloat(dollarsStr) * 100);
+    if(!isNaN(v)) return v;
+  }
+  if(typeof fallbackInt === 'number') return fallbackInt;
+  return null;
+}
+
+// Bypasses CORS by defaulting to a public proxy relay for all requests
+async function fetchJSON(url){
+  const proxied = 'https://corsproxy.io/?url=' + encodeURIComponent(url);
+  const res = await fetch(proxied, { headers: { 'Accept': 'application/json' } });
+  if(!res.ok) throw new Error('HTTP ' + res.status + ' on ' + url + ' (via relay)');
+  return res.json();
+}
+
+async function getRainSeries(){
+  const data = await fetchJSON(`${API_BASE}/series?category=Climate`);
+  const all = data.series || [];
+  return all.filter(s => {
+    const t = (s.ticker || '').toUpperCase();
+    const title = (s.title || '').toLowerCase();
+    const tags = (s.tags || []).join(' ').toLowerCase();
+    return t.includes('RAIN') || title.includes('rain') || title.includes('precipitation') || tags.includes('rain');
+  });
+}
+
+async function getMarketsForSeries(ticker){
+  let out = [];
+  let cursor = '';
+  for(let i=0;i<5;i++){ // safety cap on pagination
+    const url = `${API_BASE}/markets?series_ticker=${encodeURIComponent(ticker)}&status=open&limit=200${cursor ? '&cursor='+encodeURIComponent(cursor) : ''}`;
+    const data = await fetchJSON(url);
+    out = out.concat(data.markets || []);
+    if(!data.cursor || (data.markets || []).length === 0) break;
+    cursor = data.cursor;
+  }
+  return out;
+}
+
+async function scan(){
+  refreshBtn.disabled = true;
+  statusText.textContent = 'Finding rain series…';
+  mount.innerHTML = `<div class="loading"><div class="spinner"></div>Sweeping Kalshi's climate category for rain contracts…</div>`;
+
+  try{
+    const series = await getRainSeries();
+    if(series.length === 0){
+      state.markets = [];
+      statusText.textContent = 'No rain series found on Kalshi right now.';
+      render();
+      refreshBtn.disabled = false;
+      return;
+    }
+
+    statusText.textContent = `Found ${series.length} rain series — pulling open markets…`;
+    const results = await Promise.allSettled(series.map(s => getMarketsForSeries(s.ticker)));
+
+    let markets = [];
+    results.forEach((r, idx) => {
+      if(r.status === 'fulfilled'){
+        r.value.forEach(m => markets.push({ ...m, seriesTitle: series[idx].title, seriesTicker: series[idx].ticker }));
+      }
+    });
+
+    // normalize prices
+    markets = markets.map(m => ({
+      ...m,
+      yesAsk: cents(m.yes_ask_dollars, m.yes_ask),
+      noAsk: cents(m.no_ask_dollars, m.no_ask),
+      volume: m.volume_fp !== undefined ? Math.round(parseFloat(m.volume_fp)) : (m.volume || 0),
+    }));
+
+    state.markets = markets;
+    lastUpdated.textContent = 'Last scanned ' + new Date().toLocaleTimeString();
+    statusText.innerHTML = `<span class="dot">●</span> Scanned ${series.length} rain series, ${markets.length} open contracts.`;
+    render();
+  } catch(err){
+    mount.innerHTML = `<div class="err">
+      <strong>Scan failed.</strong><br><br>
+      ${err.message ? ('<code>'+err.message+'</code><br><br>') : ''}
+      Please ensure you are connected to the internet and that your ad-blocker isn't blocking proxy requests.
+    </div>`;
+    statusText.textContent = 'Scan failed.';
+  } finally {
+    refreshBtn.disabled = false;
+  }
+}
+
+function render(){
+  const rows = [];
+  state.markets.forEach(m => {
+    const title = m.title || m.seriesTitle || m.ticker;
+    if((state.side === 'yes' || state.side === 'both') && m.yesAsk !== null && m.yesAsk > state.threshold){
+      rows.push({ m, side: 'YES', price: m.yesAsk });
+    }
+    if((state.side === 'no' || state.side === 'both') && m.noAsk !== null && m.noAsk > state.threshold){
+      rows.push({ m, side: 'NO', price: m.noAsk });
+    }
+  });
+  rows.sort((a,b) => b.price - a.price);
+
+  if(state.markets.length === 0){
+    mount.innerHTML = '';
+    return;
+  }
+
+  if(rows.length === 0){
+    mount.innerHTML = `<div class="empty">No rain buys above ${state.threshold}¢ on the ${state.side.toUpperCase()} side right now. Lower the threshold or try BOTH sides.</div>`;
+    return;
+  }
+
+  mount.innerHTML = `<div class="list">${rows.map(r => rowHtml(r)).join('')}</div>`;
+}
+
+function rowHtml({ m, side, price }){
+  const badgeClass = side === 'YES' ? 'yes' : 'no';
+  const closeDate = m.close_time ? new Date(m.close_time).toLocaleDateString(undefined, {month:'short', day:'numeric'}) : '—';
+  const link = `https://kalshi.com/markets/${(m.seriesTicker || '').toLowerCase()}`;
+  const pct = Math.min(100, Math.max(4, price));
+  return `
+    <a class="row" href="${link}" target="_blank" rel="noopener">
+      <div class="gauge"><i style="height:${pct}%"></i></div>
+      <div class="row-body">
+        <div class="row-main">
+          <p class="row-title">${escapeHtml(m.title || m.seriesTitle || m.ticker)}</p>
+          <div class="row-meta">
+            <span class="badge ${badgeClass}">${side}</span>
+            <span>${escapeHtml(m.seriesTicker || '')}</span>
+            <span>closes ${closeDate}</span>
+            <span>vol ${m.volume || 0}</span>
+          </div>
+        </div>
+        <div class="row-price">
+          <div><span class="price-num">${price}</span><span class="price-unit">¢</span></div>
+          <div class="price-label">buy ${side.toLowerCase()}</div>
+        </div>
+      </div>
+    </a>
+  `;
+}
+
+function escapeHtml(str){
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// initial auto-scan
+scan();
+</script>
+
+</body>
+</html>
