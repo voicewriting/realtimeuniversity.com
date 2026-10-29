@@ -1,0 +1,781 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="color-scheme" content="light dark" />
+<link rel="icon" href="data:," />
+<title>Shared Voice Doc</title>
+<script src="https://apis.google.com/js/api.js" async defer></script>
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<style>
+  :root{
+    --bg:#f3f5f7;
+    --surface:#ffffff;
+    --surface-2:#eef1f4;
+    --ink:#17202e;
+    --muted:#5a687c;
+    --faint:#8592a5;
+    --line:#d9e0e8;
+    --accent:#0e6b5e;
+    --accent-ink:#ffffff;
+    --accent-soft:#e0f0ec;
+    --red:#c92e2e;
+    --red-soft:#fdecec;
+    --amber:#8a5a00;
+    --amber-soft:#fff3d6;
+    --green-soft:#e6f4ea;
+    --radius:14px;
+    --radius-sm:9px;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#11151b;
+      --surface:#1a202a;
+      --surface-2:#232b37;
+      --ink:#edf1f6;
+      --muted:#a7b2c2;
+      --faint:#7e8ca0;
+      --line:#303b4a;
+      --accent:#2fbfa8;
+      --accent-ink:#0b1f1b;
+      --accent-soft:#17352f;
+      --red:#ff7b72;
+      --red-soft:#3a2224;
+      --amber:#ffcf6b;
+      --amber-soft:#383017;
+      --green-soft:#1d3328;
+    }
+  }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--ink);
+    font-family: ui-sans-system, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    font-size:16px;
+    line-height:1.55;
+  }
+  a{color:var(--accent); font-weight:600}
+  .wrap{max-width:900px; margin:0 auto; padding:22px 16px 56px}
+  .lead{
+    font-family: Georgia, "Times New Roman", serif;
+    font-size:clamp(26px, 5vw, 38px);
+    line-height:1.18;
+    letter-spacing:-0.01em;
+    margin:6px 0 10px;
+    font-weight:700;
+  }
+  .intro{color:var(--muted); font-size:17px; margin:0 0 18px; max-width:68ch}
+  .intro strong{color:var(--ink)}
+
+  .two-ways{
+    display:grid; grid-template-columns:1fr 1fr; gap:12px; margin:0 0 18px;
+  }
+  @media (max-width:680px){ .two-ways{grid-template-columns:1fr} }
+  .way{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:16px 16px 14px;
+  }
+  .way h2{font-size:15px; margin:0 0 6px; letter-spacing:0.01em}
+  .way p{margin:0; color:var(--muted); font-size:14.5px}
+  .way .tag{
+    display:inline-block; font-size:11.5px; font-weight:700; letter-spacing:0.06em; text-transform:uppercase;
+    padding:3px 8px; border-radius:999px; margin-bottom:9px;
+  }
+  .tag-free{background:var(--green-soft); color:var(--accent)}
+  .tag-creator{background:var(--amber-soft); color:var(--amber)}
+
+  .card{
+    background:var(--surface); border:1px solid var(--line); border-radius:var(--radius);
+    padding:20px; margin:0 0 16px;
+  }
+  .card-head{display:flex; gap:12px; align-items:flex-start; margin-bottom:6px}
+  .step-num{
+    flex:0 0 auto; width:30px; height:30px; border-radius:50%;
+    background:var(--ink); color:var(--bg);
+    display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; margin-top:2px;
+  }
+  .card h2{font-size:19px; margin:0; line-height:1.3}
+  .card .sub{color:var(--muted); font-size:14.5px; margin:3px 0 0}
+  .card p{margin:10px 0}
+  .small{font-size:13.5px; color:var(--muted)}
+  .small strong{color:var(--ink)}
+
+  label.field-label{display:block; font-size:13px; font-weight:700; letter-spacing:0.02em; margin:14px 0 6px}
+  input[type="text"], input[type="url"], select, textarea{
+    width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:var(--radius-sm);
+    background:var(--surface); color:var(--ink); font:inherit; font-size:15px;
+  }
+  textarea{resize:vertical}
+  input:focus, select:focus, textarea:focus, button:focus-visible, a:focus-visible{
+    outline:2px solid var(--accent); outline-offset:2px;
+  }
+  .row{display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:12px}
+  .row > *{min-width:0}
+  .grow{flex:1 1 220px}
+
+  button{
+    font:inherit; font-weight:700; font-size:15px; cursor:pointer;
+    border-radius:var(--radius-sm); padding:11px 16px; border:1px solid transparent;
+  }
+  button:disabled{opacity:0.45; cursor:not-allowed}
+  .btn-primary{background:var(--accent); color:var(--accent-ink)}
+  .btn-dark{background:var(--ink); color:var(--bg)}
+  .btn-ghost{background:transparent; color:var(--ink); border-color:var(--line)}
+  .btn-ghost:hover{background:var(--surface-2)}
+  .btn-quiet{background:var(--surface-2); color:var(--ink); border-color:transparent}
+
+  .status{
+    display:flex; gap:9px; align-items:flex-start;
+    border-radius:var(--radius-sm); padding:11px 13px; font-size:14px; margin-top:14px;
+  }
+  .status:empty{display:none}
+  .status.info{background:var(--surface-2); color:var(--ink)}
+  .status.ok{background:var(--green-soft); color:var(--ink)}
+  .status.warn{background:var(--amber-soft); color:var(--ink)}
+  .status.err{background:var(--red-soft); color:var(--ink)}
+  .dot{flex:0 0 auto; width:9px; height:9px; border-radius:50%; margin-top:6px; background:var(--faint)}
+  .dot.on{background:var(--accent)}
+  .dot.rec{background:var(--red)}
+  @media (prefers-reduced-motion: no-preference){
+    .dot.rec{animation:pulse 1.2s ease-in-out infinite}
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.35}}
+  }
+
+  details.setup{margin-top:14px; border:1px solid var(--line); border-radius:var(--radius-sm); padding:4px 14px 10px}
+  details.setup summary{cursor:pointer; font-weight:700; padding:10px 0 4px; font-size:15px}
+  details.setup ol{margin:8px 0 8px 20px; padding:0}
+  details.setup li{margin:7px 0; font-size:14.5px; color:var(--muted)}
+  details.setup li strong{color:var(--ink)}
+  code{
+    font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size:0.88em;
+    background:var(--surface-2); padding:1px 6px; border-radius:6px; word-break:break-all;
+  }
+
+  .share-box{
+    border:1.5px dashed var(--accent); background:var(--accent-soft);
+    border-radius:var(--radius-sm); padding:14px; margin-top:14px; display:none;
+  }
+  .share-box.show{display:block}
+  .share-box .doc-title{font-weight:800; font-size:16px; margin:0 0 2px; word-break:break-word}
+  .share-link{word-break:break-all; font-size:13.5px}
+
+  /* Dictation */
+  .mic-zone{
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    padding:10px 0 4px;
+  }
+  .mic-btn{
+    width:92px; height:92px; border-radius:50%; border:none;
+    background:var(--red); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 6px 20px rgba(0,0,0,0.18);
+  }
+  .mic-btn svg{width:38px; height:38px}
+  .mic-btn.listening{background:var(--ink)}
+  .mic-state{font-weight:800; margin-top:12px; font-size:16px}
+  .mic-hint{color:var(--muted); font-size:13.5px; margin-top:2px; max-width:52ch}
+  .live-box{
+    margin-top:16px; border:1px solid var(--line); border-radius:var(--radius-sm);
+    background:var(--surface-2); padding:14px; min-height:96px; text-align:left;
+    font-size:16.5px; line-height:1.6; white-space:pre-wrap; word-break:break-word;
+  }
+  .live-box .interim{color:var(--faint)}
+  .live-box .placeholder{color:var(--faint); font-size:15px}
+  .seg{display:flex; gap:8px; flex-wrap:wrap; align-items:center}
+  .seg button{padding:8px 12px; font-size:13.5px}
+  .seg button[aria-pressed="true"]{background:var(--accent); color:var(--accent-ink); border-color:transparent}
+  .log{margin:12px 0 0; padding:0; list-style:none}
+  .log li{
+    border-top:1px solid var(--line); padding:9px 2px; font-size:14px; color:var(--muted);
+    display:flex; justify-content:space-between; gap:12px;
+  }
+  .log li span:first-child{color:var(--ink); word-break:break-word}
+  .log li time{flex:0 0 auto; font-size:12.5px}
+  .kbd-steps{margin:10px 0 0 18px; padding:0; color:var(--muted); font-size:14.5px}
+  .kbd-steps li{margin:5px 0}
+  .kbd-steps strong{color:var(--ink)}
+  footer{color:var(--muted); font-size:13.5px; margin-top:8px}
+  footer p{margin:6px 0}
+  .sr-only{position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <p class="lead">One shared doc. Everyone edits by link. Everyone can dictate.</p>
+  <p class="intro">Create a real Google Doc, share it as <strong>Anyone with the link → Editor</strong>, and send the link out. Anyone with a <strong>free Google account</strong> can open it and type by voice. You can also dictate right here and have your words appended to the same doc. No paid plan, no Workspace account needed.</p>
+
+  <div class="two-ways">
+    <section class="way" aria-labelledby="way1">
+      <span class="tag tag-free">For everyone with the link</span>
+      <h2 id="way1">Voice typing inside Google Docs</h2>
+      <p>Google's own Voice typing lives inside Docs itself — it can't be embedded in another app. Open the shared doc in <strong>Chrome</strong>, then use <strong>Tools → Voice typing</strong>. It works on free accounts and edits the live doc alongside everyone else.</p>
+    </section>
+    <section class="way" aria-labelledby="way2">
+      <span class="tag tag-creator">For the doc creator</span>
+      <h2 id="way2">Dictate from this page</h2>
+      <p>Use the microphone below and this page transcribes your speech in the browser, then appends it to the shared doc through Google's API. Only the person who created the doc needs to connect — guests never do.</p>
+    </section>
+  </div>
+
+  <!-- JOIN -->
+  <section class="card" aria-labelledby="join-h">
+    <div class="card-head">
+      <div class="step-num" aria-hidden="true">→</div>
+      <div>
+        <h2 id="join-h">Got a link already? Join here</h2>
+        <p class="sub">Paste a shared Google Doc link to open it, or to target it for dictation below.</p>
+      </div>
+    </div>
+    <label class="field-label" for="joinLink">Google Doc link</label>
+    <input type="url" id="joinLink" placeholder="https://docs.google.com/document/d/…" autocomplete="off" spellcheck="false" />
+    <div class="row">
+      <button type="button" class="btn-dark" id="btnOpenJoin">Open in Google Docs</button>
+      <button type="button" class="btn-ghost" id="btnUseJoin">Use for dictation below</button>
+    </div>
+    <div class="status" id="joinStatus" role="status"></div>
+    <p class="small" style="margin-top:12px">Once it opens in Docs (Chrome works best):</p>
+    <ol class="kbd-steps">
+      <li>Click <strong>Tools → Voice typing</strong>.</li>
+      <li>Click the <strong>microphone</strong> that appears, allow mic access, and speak. Say “period,” “comma,” and “new paragraph” as you go.</li>
+      <li>Click the microphone again to stop. Your words land in the doc in real time, visible to everyone else with the link.</li>
+    </ol>
+  </section>
+
+  <!-- CREATE -->
+  <section class="card" aria-labelledby="create-h">
+    <div class="card-head">
+      <div class="step-num" aria-hidden="true">1</div>
+      <div>
+        <h2 id="create-h">Create a new shared doc</h2>
+        <p class="sub">Creator only. One free, one-time setup — then creating docs takes seconds.</p>
+      </div>
+    </div>
+
+    <p>To create Docs from this page, Google requires <strong>your own free OAuth Client ID</strong>. There is no universal one an app like this can ship — Google ties it to your account and to the web address this page lives at. It costs nothing, works with a free Gmail account, and you only paste it here once per session. People who just edit via your link never need it.</p>
+
+    <details class="setup">
+      <summary>Get your free Client ID (about 5 minutes)</summary>
+      <ol>
+        <li>Go to <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">console.cloud.google.com</a>, sign in with your free Google account, and create a <strong>new project</strong> (any name, e.g. “Voice Doc”).</li>
+        <li>Open <strong>APIs &amp; Services → Library</strong> and enable two APIs: <strong>Google Drive API</strong> and <strong>Google Docs API</strong>.</li>
+        <li>Open <strong>APIs &amp; Services → OAuth consent screen</strong>, choose <strong>External</strong>, fill in an app name and your email, and save. If it asks for test users while the app is in “Testing,” add your own email.</li>
+        <li>Open <strong>APIs &amp; Services → Credentials → Create credentials → OAuth client ID</strong>. Application type: <strong>Web application</strong>.</li>
+        <li>Under <strong>Authorized JavaScript origins</strong>, add the web address of this page — the scheme + domain you opened it from (for example <code>https://your-site.example</code>, no path). If you run into a mismatch error later, this origin is almost always the cause — copy it exactly.</li>
+        <li>Create it, copy the <strong>Client ID</strong> (it ends in <code>.apps.googleusercontent.com</code>), and paste it below.</li>
+      </ol>
+    </details>
+
+    <label class="field-label" for="clientId">Your Google OAuth Client ID</label>
+    <input type="text" id="clientId" placeholder="xxxxxxxxxxxx-….apps.googleusercontent.com" autocomplete="off" spellcheck="false" />
+    <p class="small">Kept in this tab's memory only — it is not saved, stored, or sent anywhere except Google's own sign-in.</p>
+
+    <div class="row">
+      <button type="button" class="btn-primary" id="btnConnect">Connect my Google account</button>
+      <span class="small" id="connectLabel">Not connected</span>
+    </div>
+    <div class="status" id="connectStatus" role="status"></div>
+
+    <label class="field-label" for="docTitle">Document title</label>
+    <input type="text" id="docTitle" value="Shared Voice Notes" maxlength="120" />
+    <div class="row">
+      <button type="button" class="btn-dark" id="btnCreate" disabled>Create doc &amp; get share link</button>
+    </div>
+    <div class="status" id="createStatus" role="status"></div>
+
+    <div class="share-box" id="shareBox">
+      <p class="doc-title" id="shareTitle"></p>
+      <p class="small" style="margin:0 0 8px">Sharing is set to <strong>Anyone with the link → Editor</strong>. Anyone you send this to can edit — and forward it on — so use it for docs you're happy to have widely editable.</p>
+      <p class="share-link"><a id="shareLink" href="#" target="_blank" rel="noopener"></a></p>
+      <div class="row">
+        <button type="button" class="btn-primary" id="btnCopy">Copy link</button>
+        <a id="btnOpenDoc" href="#" target="_blank" rel="noopener" style="text-decoration:none"><button type="button" class="btn-dark" tabindex="-1">Open in Google Docs</button></a>
+      </div>
+      <div class="status" id="copyStatus" role="status"></div>
+    </div>
+  </section>
+
+  <!-- DICTATE -->
+  <section class="card" aria-labelledby="dictate-h">
+    <div class="card-head">
+      <div class="step-num" aria-hidden="true">2</div>
+      <div>
+        <h2 id="dictate-h">Dictate here — appended to the doc</h2>
+        <p class="sub" id="targetLabel">Target doc: none yet — create one above or paste a link.</p>
+      </div>
+    </div>
+
+    <div class="mic-zone">
+      <button type="button" class="mic-btn" id="btnMic" aria-label="Start dictation">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="9" y="2.5" width="6" height="11" rx="3" fill="currentColor"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3.5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+      </button>
+      <div class="mic-state" id="micState">Tap the microphone to start</div>
+      <div class="mic-hint">Works best in Chrome on desktop or Android. Speak in full sentences and say punctuation out loud — “period,” “comma,” “new paragraph.”</div>
+    </div>
+
+    <div class="row" style="justify-content:space-between">
+      <div class="seg" role="group" aria-label="Append mode">
+        <span class="small" style="font-weight:700">When I finish a sentence:</span>
+        <button type="button" id="modeAuto" aria-pressed="true">Append automatically</button>
+        <button type="button" id="modeHold" aria-pressed="false">Hold for review</button>
+      </div>
+      <div style="min-width:170px">
+        <label class="sr-only" for="langSel">Dictation language</label>
+        <select id="langSel">
+          <option value="en-US" selected>English (US)</option>
+          <option value="en-GB">English (UK)</option>
+          <option value="es-ES">Spanish (Spain)</option>
+          <option value="es-MX">Spanish (Mexico)</option>
+          <option value="fr-FR">French</option>
+          <option value="de-DE">German</option>
+          <option value="it-IT">Italian</option>
+          <option value="pt-BR">Portuguese (Brazil)</option>
+          <option value="hi-IN">Hindi</option>
+          <option value="ja-JP">Japanese</option>
+          <option value="ko-KR">Korean</option>
+          <option value="zh-CN">Chinese (Simplified)</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="live-box" id="liveBox" aria-live="polite"><span class="placeholder">Your words will appear here as you speak. Finished sentences are added below and, in automatic mode, sent straight to the doc.</span></div>
+
+    <label class="field-label" for="pendingText">Held text — review, edit, then append</label>
+    <textarea id="pendingText" rows="4" placeholder="Sentences you held for review collect here. You can also type or paste text and append it."></textarea>
+    <div class="row">
+      <button type="button" class="btn-primary" id="btnAppend">Append held text to doc</button>
+      <button type="button" class="btn-ghost" id="btnDownload">Download transcript (.txt)</button>
+      <button type="button" class="btn-quiet" id="btnClear">Clear held text</button>
+    </div>
+    <div class="status" id="appendStatus" role="status"></div>
+
+    <ul class="log" id="appendLog" aria-label="Recently appended"></ul>
+  </section>
+
+  <footer>
+    <p><strong>Good to know:</strong> transcription on this page happens with your browser's speech recognition (Chrome sends audio to Google's speech service). Nothing you say is stored by this page — text only goes to the Google Doc you chose, or stays in the box above if you hold it.</p>
+    <p>If the mic does nothing: use Chrome, check the site is allowed to use your microphone, and make sure you're signed in to the Google account that connected above. If Google says the app is unverified during sign-in, choose <em>Advanced → Go to project</em> — that's normal for a personal project in Testing mode.</p>
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var $ = function(id){ return document.getElementById(id); };
+  var els = {
+    clientId: $("clientId"), btnConnect: $("btnConnect"), connectLabel: $("connectLabel"),
+    connectStatus: $("connectStatus"), docTitle: $("docTitle"), btnCreate: $("btnCreate"),
+    createStatus: $("createStatus"), shareBox: $("shareBox"), shareTitle: $("shareTitle"),
+    shareLink: $("shareLink"), btnOpenDoc: $("btnOpenDoc"), btnCopy: $("btnCopy"), copyStatus: $("copyStatus"),
+    joinLink: $("joinLink"), btnOpenJoin: $("btnOpenJoin"), btnUseJoin: $("btnUseJoin"), joinStatus: $("joinStatus"),
+    targetLabel: $("targetLabel"), btnMic: $("btnMic"), micState: $("micState"), liveBox: $("liveBox"),
+    modeAuto: $("modeAuto"), modeHold: $("modeHold"), langSel: $("langSel"),
+    pendingText: $("pendingText"), btnAppend: $("btnAppend"), btnDownload: $("btnDownload"),
+    btnClear: $("btnClear"), appendStatus: $("appendStatus"), appendLog: $("appendLog")
+  };
+
+  var state = {
+    tokenClient: null,
+    connected: false,
+    gapiReady: false,
+    doc: null, // {id, title, link}
+    autoAppend: true,
+    listening: false,
+    wantListening: false,
+    recognition: null,
+    finalText: "",       // all finals this session (for download)
+    sessionFinals: []    // finals not yet shown in live box handling
+  };
+
+  function setStatus(el, kind, text){
+    if(!el) return;
+    if(!text){ el.className = "status"; el.innerHTML = ""; return; }
+    el.className = "status " + (kind || "info");
+    el.innerHTML = "";
+    var d = document.createElement("span");
+    d.className = "dot" + (kind === "ok" ? " on" : "");
+    var t = document.createElement("span");
+    t.textContent = text;
+    el.appendChild(d); el.appendChild(t);
+  }
+
+  function extractDocId(url){
+    if(!url) return null;
+    var m = String(url).match(/\/document\/d\/([a-zA-Z0-9_-]+)/);
+    if(m) return m[1];
+    var m2 = String(url).match(/[?&]id=([a-zA-Z0-9_-]+)/);
+    return m2 ? m2[1] : null;
+  }
+
+  function docLink(id){ return "https://docs.google.com/document/d/" + id + "/edit?usp=sharing"; }
+
+  function setTarget(doc, note){
+    state.doc = doc;
+    if(doc){
+      els.targetLabel.textContent = "Target doc: “" + doc.title + "” — dictation appends to the end of this document.";
+      if(note) setStatus(els.appendStatus, "ok", note);
+    } else {
+      els.targetLabel.textContent = "Target doc: none yet — create one above or paste a link.";
+    }
+  }
+
+  /* ---------- Google API bootstrap ---------- */
+  function loadGapiClient(){
+    return new Promise(function(resolve, reject){
+      if(!window.gapi){ reject(new Error("Google API library did not load. Check your connection and reload.")); return; }
+      gapi.load("client", function(){
+        gapi.client.init({
+          discoveryDocs: [
+            "https://www.googleapis.com/discovery/v1/apis/drive/v3/rest",
+            "https://docs.googleapis.com/$discovery/rest?version=v1"
+          ]
+        }).then(function(){
+          state.gapiReady = true;
+          resolve();
+        }, function(err){
+          reject(new Error("Could not initialise Google APIs: " + describeErr(err)));
+        });
+      });
+    });
+  }
+
+  function describeErr(err){
+    if(!err) return "unknown error";
+    if(err.result && err.result.error && err.result.error.message) return err.result.error.message;
+    if(err.error && err.error.message) return err.error.message;
+    if(err.message) return err.message;
+    try { return JSON.stringify(err); } catch(e){ return String(err); }
+  }
+
+  els.btnConnect.addEventListener("click", function(){
+    var cid = els.clientId.value.trim();
+    if(!cid){
+      setStatus(els.connectStatus, "warn", "Paste your Client ID first — open the setup steps above if you don't have one yet. It's free and takes about 5 minutes.");
+      els.clientId.focus();
+      return;
+    }
+    if(cid.indexOf(".apps.googleusercontent.com") === -1){
+      setStatus(els.connectStatus, "warn", "That doesn't look like a full Client ID — it should end in .apps.googleusercontent.com. Double-check what you copied from Credentials.");
+      return;
+    }
+    setStatus(els.connectStatus, "info", "Loading Google sign-in…");
+    loadGapiClient().then(function(){
+      if(!window.google || !google.accounts || !google.accounts.oauth2){
+        setStatus(els.connectStatus, "err", "Google sign-in library did not load. Reload the page and try again.");
+        return;
+      }
+      state.tokenClient = google.accounts.oauth2.initTokenClient({
+        client_id: cid,
+        scope: "https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/documents",
+        callback: function(resp){
+          if(resp && resp.error){
+            setStatus(els.connectStatus, "err", "Sign-in failed: " + resp.error + ". If it mentions an origin mismatch, the Authorized JavaScript origin in Google Cloud doesn't match this page's address exactly.");
+            return;
+          }
+          state.connected = true;
+          els.connectLabel.textContent = "Connected ✓ — you can create a doc now";
+          els.btnCreate.disabled = false;
+          setStatus(els.connectStatus, "ok", "Connected. Now give your doc a title and create it — it will be shared as Anyone with the link → Editor.");
+        }
+      });
+      state.tokenClient.requestAccessToken({ prompt: "consent" });
+    }).catch(function(err){
+      setStatus(els.connectStatus, "err", err.message);
+    });
+  });
+
+  /* ---------- Create doc ---------- */
+  els.btnCreate.addEventListener("click", function(){
+    if(!state.connected){ setStatus(els.createStatus, "warn", "Connect your Google account first."); return; }
+    var title = els.docTitle.value.trim() || "Shared Voice Notes";
+    els.btnCreate.disabled = true;
+    setStatus(els.createStatus, "info", "Creating “" + title + "” in your Google Drive…");
+    gapi.client.drive.files.create({
+      resource: { name: title, mimeType: "application/vnd.google-apps.document" },
+      fields: "id,name,webViewLink"
+    }).then(function(resp){
+      var file = resp.result;
+      setStatus(els.createStatus, "info", "Doc created — setting sharing to Anyone with the link → Editor…");
+      return gapi.client.drive.permissions.create({
+        fileId: file.id,
+        sendNotificationEmail: false,
+        resource: { type: "anyone", role: "writer" }
+      }).then(function(){
+        return file;
+      });
+    }).then(function(file){
+      var link = file.webViewLink || docLink(file.id);
+      var doc = { id: file.id, title: file.name || title, link: link };
+      setTarget(doc);
+      els.shareTitle.textContent = doc.title;
+      els.shareLink.textContent = link;
+      els.shareLink.href = link;
+      els.btnOpenDoc.href = link;
+      els.shareBox.classList.add("show");
+      setStatus(els.createStatus, "ok", "Done — your shared doc is live. Copy the link below and send it to anyone you want editing and dictating with you.");
+      els.btnCreate.disabled = false;
+      els.shareBox.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }).catch(function(err){
+      els.btnCreate.disabled = false;
+      var msg = describeErr(err);
+      if(/401|403/.test(msg)) msg += " — your sign-in may have expired; click Connect again, then retry.";
+      setStatus(els.createStatus, "err", "Couldn't create the doc: " + msg);
+    });
+  });
+
+  els.btnCopy.addEventListener("click", function(){
+    var link = els.shareLink.textContent.trim();
+    if(!link) return;
+    function done(){ setStatus(els.copyStatus, "ok", "Link copied — paste it anywhere (text, email, chat) to invite editors."); }
+    function fail(){ setStatus(els.copyStatus, "warn", "Copy didn't work in this browser — long-press or right-click the link above and copy it manually."); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(link).then(done, fail);
+    } else { fail(); }
+  });
+
+  /* ---------- Join with existing link ---------- */
+  els.btnOpenJoin.addEventListener("click", function(){
+    var url = els.joinLink.value.trim();
+    if(!url){ setStatus(els.joinStatus, "warn", "Paste a Google Doc link first."); els.joinLink.focus(); return; }
+    window.open(url, "_blank", "noopener");
+    setStatus(els.joinStatus, "ok", "Opened in a new tab. In Docs, use Tools → Voice typing (Chrome) to dictate straight into it.");
+  });
+
+  els.btnUseJoin.addEventListener("click", function(){
+    var url = els.joinLink.value.trim();
+    var id = extractDocId(url);
+    if(!id){ setStatus(els.joinStatus, "warn", "Couldn't find a document ID in that link. It should look like docs.google.com/document/d/…/edit."); return; }
+    setTarget({ id: id, title: "Linked document", link: url }, "Dictation below will now append to that document. Appending needs the connected account to have edit access to it.");
+    setStatus(els.joinStatus, "ok", "Set as the dictation target. Scroll to the microphone — you'll need to be connected above with an account that can edit this doc.");
+    // If connected, try to fetch the real title
+    if(state.connected && state.gapiReady){
+      gapi.client.drive.files.get({ fileId: id, fields: "name,webViewLink" }).then(function(r){
+        if(r.result && r.result.name) setTarget({ id: id, title: r.result.name, link: r.result.webViewLink || url });
+      }, function(){ /* keep fallback title */ });
+    }
+  });
+
+  /* ---------- Append to doc via Docs API ---------- */
+  function appendToDoc(text){
+    text = (text || "").trim();
+    if(!text) return Promise.resolve(false);
+    if(!state.doc){ setStatus(els.appendStatus, "warn", "No target doc yet — create one above or paste a link and choose “Use for dictation.” Your text is safe in the held-text box."); return Promise.resolve(false); }
+    if(!state.connected){ setStatus(els.appendStatus, "warn", "You're not connected — appending needs the creator connection above. Your text is safe in the held-text box."); return Promise.resolve(false); }
+    return gapi.client.docs.documents.get({ documentId: state.doc.id }).then(function(resp){
+      var content = (resp.result && resp.result.body && resp.result.body.content) || [];
+      var endIndex = 1;
+      for(var i = 0; i < content.length; i++){
+        if(content[i].endIndex && content[i].endIndex > endIndex) endIndex = content[i].endIndex;
+      }
+      var insertAt = Math.max(1, endIndex - 1);
+      var payload = text + "\n";
+      // Add a separating newline if the doc already has content and doesn't end with a blank line
+      if(insertAt > 1) payload = "\n" + payload;
+      return gapi.client.docs.documents.batchUpdate({
+        documentId: state.doc.id,
+        resource: { requests: [{ insertText: { location: { index: insertAt }, text: payload } }] }
+      });
+    }).then(function(){
+      logAppend(text);
+      setStatus(els.appendStatus, "ok", "Appended to “" + state.doc.title + ".” Open the doc to watch it alongside everyone else's edits.");
+      return true;
+    }).catch(function(err){
+      var msg = describeErr(err);
+      if(/401/.test(msg)) msg += " — sign-in expired; reconnect above, then press Append again. Your text is still held below.";
+      else if(/403/.test(msg)) msg += " — the connected account may not have edit access to this doc.";
+      setStatus(els.appendStatus, "err", "Append failed: " + msg);
+      // Put the text back in the held box so nothing is lost
+      var cur = els.pendingText.value.trim();
+      els.pendingText.value = cur ? cur + " " + text : text;
+      return false;
+    });
+  }
+
+  function logAppend(text){
+    var li = document.createElement("li");
+    var s = document.createElement("span");
+    s.textContent = "“" + (text.length > 90 ? text.slice(0, 90) + "…”" : text + "”");
+    var t = document.createElement("time");
+    var now = new Date();
+    t.textContent = now.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    li.appendChild(s); li.appendChild(t);
+    els.appendLog.insertBefore(li, els.appendLog.firstChild);
+    while(els.appendLog.children.length > 6) els.appendLog.removeChild(els.appendLog.lastChild);
+  }
+
+  els.btnAppend.addEventListener("click", function(){
+    var text = els.pendingText.value.trim();
+    if(!text){ setStatus(els.appendStatus, "warn", "There's no held text to append yet — dictate something in “Hold for review” mode, or type in the box."); return; }
+    els.btnAppend.disabled = true;
+    appendToDoc(text).then(function(ok){
+      if(ok) els.pendingText.value = "";
+      els.btnAppend.disabled = false;
+    });
+  });
+
+  els.btnClear.addEventListener("click", function(){
+    els.pendingText.value = "";
+    setStatus(els.appendStatus, "info", "Held text cleared. Nothing was sent to the doc.");
+  });
+
+  els.btnDownload.addEventListener("click", function(){
+    var parts = [];
+    if(state.finalText.trim()) parts.push(state.finalText.trim());
+    if(els.pendingText.value.trim()) parts.push(els.pendingText.value.trim());
+    var body = parts.join("\n\n");
+    if(!body){ setStatus(els.appendStatus, "warn", "Nothing to download yet — dictate or type something first."); return; }
+    var blob = new Blob([body], { type: "text/plain;charset=utf-8" });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = (state.doc ? state.doc.title.replace(/[^\w\- ]+/g, "").trim().replace(/\s+/g, "-").toLowerCase() : "voice-transcript") + ".txt";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ URL.revokeObjectURL(a.href); a.remove(); }, 400);
+  });
+
+  /* ---------- Append mode toggle ---------- */
+  function setMode(auto){
+    state.autoAppend = auto;
+    els.modeAuto.setAttribute("aria-pressed", auto ? "true" : "false");
+    els.modeHold.setAttribute("aria-pressed", auto ? "false" : "true");
+  }
+  els.modeAuto.addEventListener("click", function(){ setMode(true); });
+  els.modeHold.addEventListener("click", function(){ setMode(false); });
+
+  /* ---------- Speech recognition ---------- */
+  var SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  var finalsShown = "";
+
+  function renderLive(interim){
+    els.liveBox.innerHTML = "";
+    if(!finalsShown && !interim){
+      var ph = document.createElement("span");
+      ph.className = "placeholder";
+      ph.textContent = "Listening… start speaking.";
+      els.liveBox.appendChild(ph);
+      return;
+    }
+    if(finalsShown){
+      els.liveBox.appendChild(document.createTextNode(finalsShown + (interim ? " " : "")));
+    }
+    if(interim){
+      var s = document.createElement("span");
+      s.className = "interim";
+      s.textContent = interim;
+      els.liveBox.appendChild(s);
+    }
+  }
+
+  function handleFinal(sentence){
+    sentence = sentence.trim();
+    if(!sentence) return;
+    // Light tidy-up: capitalise first letter
+    sentence = sentence.charAt(0).toUpperCase() + sentence.slice(1);
+    state.finalText = (state.finalText ? state.finalText + " " : "") + sentence;
+    finalsShown = (finalsShown ? finalsShown + " " : "") + sentence;
+    renderLive("");
+    if(state.autoAppend){
+      appendToDoc(sentence);
+    } else {
+      var cur = els.pendingText.value.trim();
+      els.pendingText.value = cur ? cur + " " + sentence : sentence;
+      setStatus(els.appendStatus, "info", "Sentence held for review — edit it in the box, then press “Append held text to doc.”");
+    }
+  }
+
+  function startListening(){
+    if(!SR){
+      els.micState.textContent = "Dictation isn't available in this browser";
+      setStatus(els.appendStatus, "warn", "This browser doesn't support speech recognition. Use Chrome — or open the doc and use Google Docs' own Tools → Voice typing instead, which needs no setup here.");
+      return;
+    }
+    if(state.listening) { stopListening(); return; }
+    var rec = new SR();
+    rec.continuous = true;
+    rec.interimResults = true;
+    rec.lang = els.langSel.value;
+    state.recognition = rec;
+
+    rec.onresult = function(event){
+      var interim = "";
+      for(var i = event.resultIndex; i < event.results.length; i++){
+        var res = event.results[i];
+        if(res.isFinal){ handleFinal(res[0].transcript); }
+        else { interim += res[0].transcript; }
+      }
+      renderLive(interim.trim());
+    };
+    rec.onerror = function(event){
+      if(event.error === "not-allowed" || event.error === "service-not-allowed"){
+        state.wantListening = false;
+        els.micState.textContent = "Microphone blocked";
+        setStatus(els.appendStatus, "err", "Microphone access was blocked. Allow the mic for this site in your browser settings, then try again — or dictate with Tools → Voice typing inside the Doc itself.");
+      } else if(event.error === "no-speech"){
+        // common and harmless in continuous mode; onend restart handles it
+      } else if(event.error === "network"){
+        setStatus(els.appendStatus, "warn", "Speech service hit a network hiccup — dictation will try to resume. Check your connection if it keeps happening.");
+      }
+    };
+    rec.onend = function(){
+      state.listening = false;
+      els.btnMic.classList.remove("listening");
+      els.btnMic.setAttribute("aria-label", "Start dictation");
+      if(state.wantListening){
+        // Chrome stops after pauses — quietly restart while the user wants to keep going
+        try { rec.start(); state.listening = true; els.btnMic.classList.add("listening"); }
+        catch(e){ els.micState.textContent = "Tap the microphone to start"; }
+      } else {
+        els.micState.textContent = "Tap the microphone to start";
+      }
+    };
+    state.wantListening = true;
+    try {
+      rec.start();
+      state.listening = true;
+      els.btnMic.classList.add("listening");
+      els.btnMic.setAttribute("aria-label", "Stop dictation");
+      els.micState.textContent = "Listening — speak now";
+      renderLive("");
+      if(!state.doc){
+        setStatus(els.appendStatus, "info", "Listening. Heads-up: no target doc is set yet, so keep “Hold for review” on or create/pick a doc — otherwise finished sentences have nowhere to go.");
+      } else if(!state.connected && state.autoAppend){
+        setStatus(els.appendStatus, "warn", "Listening — but you're not connected, so auto-append can't reach the doc. Switch to “Hold for review” to keep your words in the box, or connect above.");
+      }
+    } catch(e){
+      state.wantListening = false;
+      els.micState.textContent = "Couldn't start the microphone";
+      setStatus(els.appendStatus, "err", "The microphone couldn't start: " + e.message);
+    }
+  }
+
+  function stopListening(){
+    state.wantListening = false;
+    if(state.recognition){
+      try { state.recognition.stop(); } catch(e){}
+    }
+    state.listening = false;
+    els.btnMic.classList.remove("listening");
+    els.micState.textContent = "Tap the microphone to start";
+  }
+
+  els.btnMic.addEventListener("click", startListening);
+  els.langSel.addEventListener("change", function(){
+    if(state.listening){
+      stopListening();
+      setStatus(els.appendStatus, "info", "Language changed — tap the microphone to dictate in the new language.");
+    }
+  });
+
+  if(!SR){
+    els.micState.textContent = "Use Chrome for dictation here";
+    els.micHintText = null;
+  }
+})();
+</script>
+</body>
+</html>
