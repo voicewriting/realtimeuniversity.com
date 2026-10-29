@@ -82,7 +82,7 @@
 <div class="wrap">
   <section class="card" aria-labelledby="dictate-h">
     <h1 id="dictate-h">Dictate here</h1>
-    <p class="sub">Just a dump of what is being said. No account, no Google Doc, no append.</p>
+    <p class="sub">Just a dump of what is being said. No account, no Google Doc, no append. Copy transcript also opens a prefilled Gmail draft to Pipertecmaster@gmail.com.</p>
 
     <div class="mic-zone">
       <button type="button" class="mic-btn" id="btnMic" aria-label="Start dictation">
@@ -258,14 +258,34 @@
   document.getElementById("btnCopy").addEventListener("click", function () {
     var text = currentText();
     if (!text) { setStatus("", "Nothing to copy yet — dictate or type something first."); return; }
+
+    // Copy first, then open a prefilled Gmail compose window.
+    // A plain web page cannot silently create a draft inside someone's
+    // Gmail account without a Google sign-in and Gmail API permission,
+    // which this stripped page deliberately does not use. Opening the
+    // compose window is the no-sign-in route: Gmail saves that compose
+    // as a draft, and the user can close it, edit it, or send it later.
+    function openDraft() {
+      var url = "https://mail.google.com/mail/?view=cm&fs=1"
+        + "&to=" + encodeURIComponent("Pipertecmaster@gmail.com")
+        + "&su=" + encodeURIComponent("Voice Transcript")
+        + "&body=" + encodeURIComponent(text);
+      var win = window.open(url, "_blank", "noopener");
+      if (!win) {
+        setStatus("", "Transcript copied, but the email draft window was blocked — allow pop-ups for this site and tap Copy again.");
+      } else if (text.length > 6000) {
+        setStatus("", "Transcript copied and a Gmail draft opened — very long transcripts may be cut off in the draft, so use Download transcript (.txt) for the full text if needed.");
+      } else {
+        setStatus("ok", "Transcript copied, and a Gmail draft to Pipertecmaster@gmail.com opened — Gmail saves it as a draft until you send or close it.");
+      }
+    }
+
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(function () {
-        setStatus("ok", "Transcript copied.");
-      }, function () {
-        setStatus("", "Copy didn't work in this browser — select the text in the box and copy it manually.");
+      navigator.clipboard.writeText(text).then(openDraft, function () {
+        setStatus("", "Copy didn't work in this browser — select the text in the box and copy it manually, then tap Copy again for the email draft.");
       });
     } else {
-      setStatus("", "Copy didn't work in this browser — select the text in the box and copy it manually.");
+      openDraft();
     }
   });
 
